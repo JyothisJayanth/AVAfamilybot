@@ -22,7 +22,7 @@ Hello {}, my name is {}! if you have any questions about how to use me please gi
 
 I am a group manager bot maintained by  [Wrench](tg://user?id={}).
 
-I am Created to manage [A2Z Movies Club](tg:@a2zmoviesclub). .
+I am Created to manage [A2Z Movies Club](t.me/a2zmoviesclub).
 
 For more commands click /help...
 
