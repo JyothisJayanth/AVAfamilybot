@@ -40,7 +40,7 @@ def list_handlers(bot: Bot, update: Update):
             filter_list = "*local filters:*\n"
         else:
             chat_name = chat.title
-            filter_list = "*Filters in {}*:\n"
+            filter_list = "*Filters in {}*:\n".format(chat_name)
 
 
     all_handlers = sql.get_chat_triggers(chat_id)
@@ -193,11 +193,9 @@ def reply_filter(bot: Bot, update: Update):
     if not to_match:
         return
 
-    # my custom thing
     if message.reply_to_message:
         message = message.reply_to_message
-    ad_filter = ""
-    # my custom thing
+
 
     chat_filters = sql.get_chat_triggers(chat.id)
     for keyword in chat_filters:
@@ -205,17 +203,15 @@ def reply_filter(bot: Bot, update: Update):
         if re.search(pattern, to_match, flags=re.IGNORECASE):
             filt = sql.get_filter(chat.id, keyword)
             buttons = sql.get_buttons(chat.id, filt.keyword)
+            if len(buttons) > 0:
+                keyb = build_keyboard(buttons)
+                keyboard = InlineKeyboardMarkup(keyb)
             if filt.is_sticker:
                 message.reply_sticker(filt.reply)
             elif filt.is_document:
                 message.reply_document(filt.reply)
             elif filt.is_image:
-                if len(buttons) > 0:
-                    keyb = build_keyboard(buttons)
-                    keyboard = InlineKeyboardMarkup(keyb)
-                    message.reply_photo(filt.reply, reply_markup=keyboard)
-                else:
-                    message.reply_photo(filt.reply)
+                message.reply_photo(filt.reply, reply_markup=keyboard)
             elif filt.is_audio:
                 message.reply_audio(filt.reply)
             elif filt.is_voice:
@@ -231,7 +227,7 @@ def reply_filter(bot: Bot, update: Update):
                     should_preview_disabled = False
 
                 try:
-                    message.reply_text(ad_filter + "\n" + filt.reply, parse_mode=ParseMode.MARKDOWN,
+                    message.reply_text(filt.reply, parse_mode=ParseMode.MARKDOWN,
                                        disable_web_page_preview=should_preview_disabled,
                                        reply_markup=keyboard)
                 except BadRequest as excp:
@@ -251,7 +247,7 @@ def reply_filter(bot: Bot, update: Update):
 
             else:
                 # LEGACY - all new filters will have has_markdown set to True.
-                message.reply_text(ad_filter + "\n" + filt.reply)
+                message.reply_text(filt.reply)
             break
 
 
@@ -284,7 +280,7 @@ __mod_name__ = "Filters"
 FILTER_HANDLER = CommandHandler("filter", filters)
 STOP_HANDLER = CommandHandler("stop", stop_filter)
 LIST_HANDLER = DisableAbleCommandHandler("filters", list_handlers, admin_ok=True)
-CUST_FILTER_HANDLER = MessageHandler(CustomFilters.has_text, reply_filter, edited_updates=True)
+CUST_FILTER_HANDLER = MessageHandler(CustomFilters.has_text, reply_filter)
 
 dispatcher.add_handler(FILTER_HANDLER)
 dispatcher.add_handler(STOP_HANDLER)
